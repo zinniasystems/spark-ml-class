@@ -43,6 +43,20 @@ object RegressionUtil {
 
   }
 
+  def splitData(inputData: RDD[String], percentageOfData:Double) : RDD[String] = {
+    val numberOfValues = inputData.count() * percentageOfData
+
+    var i = 0.0
+    inputData.filter(each=>{
+      i = i+1.0
+      if(i < numberOfValues)
+        true
+      else
+        false
+
+    })
+  }
+
 }
 
 

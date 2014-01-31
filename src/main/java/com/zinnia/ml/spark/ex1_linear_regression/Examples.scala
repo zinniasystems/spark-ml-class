@@ -22,7 +22,6 @@ object Ex1 {
     labelledRDD = featureScaledData._1.cache()
     val labelMeanAndStdDev = featureScaledData._2
     val featureMeanAndStdDev = featureScaledData._3
-    labelledRDD = featureScaledData._1
     val model = regression.runLinearRegression(labelledRDD, 30, Array(0.80),0.6,1.0)
     println("Finding Error Rate")
     val errorRate = regression.findErrorRate(labelledRDD, model)
