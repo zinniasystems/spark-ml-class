@@ -52,7 +52,6 @@ object Ex2_Data2{
     labelledRDD = featureScaledData._1.cache()
     val featureMeanAndStdDev = featureScaledData._2
     val model = regression.runRegression(labelledRDD,10,Array(0.0,0.0),1.0,1.0)
-    //val model = regression.runRegularizedRegression(labelledRDD,10,Array(0.0,0.0),1.0,1.0)
     println("Finding Error Rate")
     val errorRate = regression.findErrorRate(labelledRDD, model)
     println("Error Rate is:" + errorRate)
@@ -80,14 +79,14 @@ object Ex2_Data2_Poly{
     println("Count is "+labelledRDD.count())
     val degreeOfPoly = 4
     labelledRDD = labelledRDD.map(eachPoint=>{
-    def mapfeatures(featureArray:Array[Double],degree:Int):Array[Double] = {
+    def polynomialFeatures(featureArray:Array[Double],degree:Int):Array[Double] = {
       var outputArray = Array[Double]()
         for (i <- 1 to degree ;j<-0 to i){
           outputArray +:= scala.math.pow(featureArray(0),i-j)*scala.math.pow(featureArray(1),j)
         }
         outputArray
       }
-      new LabeledPoint(eachPoint.label,mapfeatures(eachPoint.features,degreeOfPoly))
+      new LabeledPoint(eachPoint.label,polynomialFeatures(eachPoint.features,degreeOfPoly))
     })
     println("Number of features is "+labelledRDD.first().features.length)
     println("Count is "+labelledRDD.count())
@@ -104,9 +103,9 @@ object Ex2_Data2_Poly{
     println(model.intercept)
     model.weights.foreach(println)
     println("Prediction for the values -0.21947,-0.016813 :")
-    println(regression.doPrediction(model,regression.mapfeatures(Array(-0.21947,-0.016813),degreeOfPoly),featureMeanAndStdDev))
+    println(regression.doPrediction(model,regression.polynomialFeatures(Array(-0.21947,-0.016813),degreeOfPoly),featureMeanAndStdDev))
     println("Prediction for the values 0.60426,0.59722 :")
-    println(regression.doPrediction(model,regression.mapfeatures(Array(0.60426,0.59722),degreeOfPoly),featureMeanAndStdDev))
+    println(regression.doPrediction(model,regression.polynomialFeatures(Array(0.60426,0.59722),degreeOfPoly),featureMeanAndStdDev))
 
   }
 }
@@ -207,7 +206,7 @@ object Ex3_Data4{
 }
 
 
-object Ex3RealTimeData{
+object Ex3_RealTimeData{
   def main(args: Array[String]) {
     val regression = new LogisticRegression
     val context = new SparkContext("local", "ml-exercise")
@@ -223,8 +222,8 @@ object Ex3RealTimeData{
     labelledRDD = featureScaledData._1.cache()
     val featureMeanAndStdDev = featureScaledData._2
     val thetaArray = new Array[Double](10)
-    val model = regression.runRegression(labelledRDD,10,thetaArray,1.0,1.0)
-    //val model = regression.runRegularizedRegression(labelledRDD,10,thetaArray,1.0,1.0,0.01)
+    //val model = regression.runRegression(labelledRDD,10,thetaArray,1.0,1.0)
+    val model = regression.runRegularizedRegression(labelledRDD,10,thetaArray,1.0,1.0,0.01)
     println("Finding Error Rate")
     val errorRate = regression.findErrorRate(labelledRDD, model)
     println("Error Rate for 70% of the data is:" + errorRate*100+"%")
