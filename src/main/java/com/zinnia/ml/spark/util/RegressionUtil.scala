@@ -6,6 +6,7 @@ import scala.util.grammar.LabelledRHS
 import org.apache.spark.mllib.regression.{LinearRegressionModel, LinearRegressionWithSGD, LabeledPoint}
 import java.lang.Math
 import org.apache.spark.mllib.classification.{LogisticRegressionWithSGD, LogisticRegressionModel}
+import org.jblas.DoubleMatrix
 
 /**
  * Created with IntelliJ IDEA.
@@ -57,6 +58,12 @@ object RegressionUtil {
     })
   }
 
+}
+
+object Test{
+  def main(args: Array[String]) {
+
+  }
 }
 
 

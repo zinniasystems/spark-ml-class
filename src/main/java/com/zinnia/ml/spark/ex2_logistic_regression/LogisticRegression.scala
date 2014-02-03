@@ -11,6 +11,7 @@ import org.apache.spark.SparkContext
 import java.lang.Math
 import org.apache.spark.mllib.optimization.{SquaredL2Updater, L1Updater}
 import java.util.Random
+import org.apache.spark.mllib.util.MLUtils
 
 /**
  * Created with IntelliJ IDEA.
@@ -69,11 +70,11 @@ class LogisticRegression {
     value
   }
 
-  def doPredictionMultiClass(modelMap: Map[Int, LogisticRegressionModel], features: Array[Double], featureMeanStd: Array[(Double, Double)] = null): Double = {
-    if (featureMeanStd != null) {
+  def doPredictionMultiClass(modelMap: Map[Int, LogisticRegressionModel], features: Array[Double], featureMean: Array[Double] = null, featureStd : Array[Double] = null): Double = {
+    if (featureMean != null && featureStd != null) {
       val normalizedFeatures = new Array[Double](features.length)
       for (a <- 0 to features.length - 1) {
-        normalizedFeatures(a) = (features(a) - featureMeanStd(a)._1) / featureMeanStd(a)._2
+        normalizedFeatures(a) = (features(a) - featureMean(a)) / featureStd(a)
       }
       var resultsMap: Map[Int, Double] = Map()
       for (i <- 1 to modelMap.size) {
@@ -86,16 +87,15 @@ class LogisticRegression {
       for (i <- 1 to modelMap.size) {
         resultsMap += (i -> predictPoint(modelMap.get(i).orNull, features))
       }
-      val finalPredictedValue = resultsMap.maxBy(_._2)._1
-      finalPredictedValue
+      resultsMap.maxBy(_._2)._1
     }
   }
 
-  def doPrediction(model: LogisticRegressionModel, features: Array[Double], featureMeanStd: Array[(Double, Double)] = null): Double = {
-    if (featureMeanStd != null) {
+  def doPrediction(model: LogisticRegressionModel, features: Array[Double], featureMean: Array[Double] = null, featureStd : Array[Double] = null): Double = {
+    if (featureMean != null && featureStd != null) {
       val normalizedFeatures = new Array[Double](features.length)
       for (a <- 0 to features.length - 1) {
-        normalizedFeatures(a) = (features(a) - featureMeanStd(a)._1) / featureMeanStd(a)._2
+        normalizedFeatures(a) = (features(a) - featureMean(a)) / featureStd(a)
       }
       val finalPredictedValue = model.predict(normalizedFeatures)
       finalPredictedValue
@@ -127,30 +127,25 @@ class LogisticRegression {
     logisticRegressionModel
   }
 
-  def normaliseFeatures(labelledRDD: RDD[LabeledPoint]): (RDD[LabeledPoint], Array[(Double, Double)]) = {
+  def normaliseFeatures(labelledRDD: RDD[LabeledPoint]): (RDD[LabeledPoint], Array[Double], Array[Double]) = {
     val numOfFeatures = labelledRDD.first().features.length
-    println(numOfFeatures)
-    val featureMeanAndStdDev = new Array[(Double, Double)](numOfFeatures)
-    for (a <- 0 to labelledRDD.first().features.length - 1) {
-      val singleFeature = labelledRDD.map(point => {
-        point.features(a)
-      })
-      singleFeature.cache()
-      featureMeanAndStdDev(a) = (RegressionUtil.calcMeanAndStdDev(singleFeature.toArray()))
-    }
+    val results = MLUtils.computeStats(labelledRDD,numOfFeatures,labelledRDD.count())
+    val featureMean = results._2
+    val featureStdDev = results._3
+
     val normalizedRDD = labelledRDD.map(point => {
       val normalizedFeatureArray = new Array[Double](numOfFeatures)
       val features = point.features
       for (a <- 0 to numOfFeatures - 1) {
-        if (featureMeanAndStdDev(a)._1 == 0 && featureMeanAndStdDev(a)._2 == 0) {
+        if (featureMean.get(a) == 0 && featureStdDev.get(a) == 0) {
           normalizedFeatureArray(a) = 0.0
         } else {
-          normalizedFeatureArray(a) = (features(a) - featureMeanAndStdDev(a)._1) / featureMeanAndStdDev(a)._2
+          normalizedFeatureArray(a) = (features(a) - featureMean.get(a)) / featureStdDev.get(a)
         }
       }
       LabeledPoint(point.label, normalizedFeatureArray)
     })
-    (normalizedRDD, featureMeanAndStdDev)
+    (normalizedRDD,featureMean.toArray,featureStdDev.toArray)
   }
 
   def split[T: Manifest](data: RDD[T], percentage: Double, seed: Long = System.currentTimeMillis()): (RDD[T], RDD[T]) = {
