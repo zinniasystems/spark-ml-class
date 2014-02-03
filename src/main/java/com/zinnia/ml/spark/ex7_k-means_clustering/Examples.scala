@@ -43,8 +43,8 @@ object Ex7ImageData{
     })
 
     val kMeans = new clustering.KMeans()
-    kMeans.setK(16)
-    kMeans.setMaxIterations(10)
+    kMeans.setK(16).setEpsilon(0.001)
+    //kMeans.setMaxIterations(10)
     val model = kMeans.run(inputDataRDD)
     println(model.computeCost(inputDataRDD))
     model.clusterCenters.foreach(each=>{
