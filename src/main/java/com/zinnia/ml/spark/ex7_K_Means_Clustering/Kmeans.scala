@@ -5,17 +5,10 @@ import org.apache.spark.mllib.clustering.KMeans
 import org.apache.spark.mllib.util.MLUtils
 
 /**
- * Created with IntelliJ IDEA.
- * User: hadoop
- * Date: 23/1/14
- * Time: 1:22 PM
- * To change this template use File | Settings | File Templates.
- */
-/**
  * CustomKmeans class which has the methods to some of the key operations involved in K-means algorithm like
  * running K-means algorithm on given data set, pre processing of data set, finding the centroids etc..
  */
-class CustomKmeans {
+class Kmeans {
   /**
    *
    * @param inputRawRDD raw input which is fed from the source
