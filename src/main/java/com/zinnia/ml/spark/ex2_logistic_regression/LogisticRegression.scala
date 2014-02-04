@@ -2,14 +2,10 @@ package com.zinnia.ml.spark.ex2_logistic_regression
 
 import org.apache.spark.mllib.classification.{LogisticRegressionWithSGD, LogisticRegressionModel}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.regression.LabeledPoint
-import com.zinnia.ml.spark.util.RegressionUtil
-import scala.collection.mutable
 import org.jblas.DoubleMatrix
 import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.SparkContext
 import java.lang.Math
-import org.apache.spark.mllib.optimization.{SquaredL2Updater, L1Updater}
+import org.apache.spark.mllib.optimization.L1Updater
 import java.util.Random
 import org.apache.spark.mllib.util.MLUtils
 
@@ -23,16 +19,18 @@ import org.apache.spark.mllib.util.MLUtils
 class LogisticRegression {
 
   def runMultiClassRegression(listOfMappedRDDs: List[(Int, RDD[LabeledPoint])], numberOfIterations: Int, initialWeights: Array[Double], stepSize: Double, miniBatchFraction: Double): Map[Int, LogisticRegressionModel] = {
+    val broadcastRegressionOptions = listOfMappedRDDs.head._2.context.broadcast(numberOfIterations,initialWeights,stepSize,miniBatchFraction)
     val rddOfModels = listOfMappedRDDs.map(eachRDD => {
       val regression = new LogisticRegressionWithSGD()
-      regression.optimizer.setNumIterations(numberOfIterations).setStepSize(stepSize).setMiniBatchFraction(miniBatchFraction)
-      val model = regression.run(eachRDD._2, initialWeights)
+      regression.optimizer.setNumIterations(broadcastRegressionOptions.value._1).setStepSize(broadcastRegressionOptions.value._3).setMiniBatchFraction(broadcastRegressionOptions.value._4)
+      val model = regression.run(eachRDD._2, broadcastRegressionOptions.value._2)
       (eachRDD._1, model)
     })
     rddOfModels.toMap
   }
 
   def findErrorRateMultiClass(modelMap: Map[Int, LogisticRegressionModel], labelledRDD: RDD[LabeledPoint]): Double = {
+    val broadcastModelMap = labelledRDD.context.broadcast(modelMap)
     val labelAndPreds = labelledRDD.map(point => {
       def predictPoint(model: LogisticRegressionModel, testData: Array[Double]): Double = {
         val testDataMat = new DoubleMatrix(1, testData.length, testData: _*)
@@ -42,6 +40,7 @@ class LogisticRegression {
         value
       }
       var resultsMap: Map[Int, Double] = Map()
+      val modelMap = broadcastModelMap.value
       for (i <- 1 to modelMap.size) {
         resultsMap += (i -> predictPoint(modelMap.get(i).orNull, point.features))
       }
@@ -53,8 +52,10 @@ class LogisticRegression {
 
 
   def findErrorRate(labelledRDD: RDD[LabeledPoint], model: LogisticRegressionModel): Double = {
+    val broadcastModel = labelledRDD.context.broadcast(model)
     val labelAndPreds = labelledRDD.map {
       point =>
+        val model = broadcastModel.value
         val prediction = model.predict(point.features)
         (point.label, prediction)
     }
@@ -70,7 +71,7 @@ class LogisticRegression {
     value
   }
 
-  def doPredictionMultiClass(modelMap: Map[Int, LogisticRegressionModel], features: Array[Double], featureMean: Array[Double] = null, featureStd : Array[Double] = null): Double = {
+  def doPredictionMultiClass(modelMap: Map[Int, LogisticRegressionModel], features: Array[Double], featureMean: Array[Double] = null, featureStd: Array[Double] = null): Double = {
     if (featureMean != null && featureStd != null) {
       val normalizedFeatures = new Array[Double](features.length)
       for (a <- 0 to features.length - 1) {
@@ -91,7 +92,7 @@ class LogisticRegression {
     }
   }
 
-  def doPrediction(model: LogisticRegressionModel, features: Array[Double], featureMean: Array[Double] = null, featureStd : Array[Double] = null): Double = {
+  def doPrediction(model: LogisticRegressionModel, features: Array[Double], featureMean: Array[Double] = null, featureStd: Array[Double] = null): Double = {
     if (featureMean != null && featureStd != null) {
       val normalizedFeatures = new Array[Double](features.length)
       for (a <- 0 to features.length - 1) {
@@ -129,23 +130,24 @@ class LogisticRegression {
 
   def normaliseFeatures(labelledRDD: RDD[LabeledPoint]): (RDD[LabeledPoint], Array[Double], Array[Double]) = {
     val numOfFeatures = labelledRDD.first().features.length
-    val results = MLUtils.computeStats(labelledRDD,numOfFeatures,labelledRDD.count())
-    val featureMean = results._2
-    val featureStdDev = results._3
+    val results = MLUtils.computeStats(labelledRDD, numOfFeatures, labelledRDD.count())
+    val featureMean = results._2.toArray
+    val featureStdDev = results._3.toArray
+    val broadcastMeanAndStdDev = labelledRDD.context.broadcast(featureMean,featureStdDev)
 
     val normalizedRDD = labelledRDD.map(point => {
       val normalizedFeatureArray = new Array[Double](numOfFeatures)
       val features = point.features
       for (a <- 0 to numOfFeatures - 1) {
-        if (featureMean.get(a) == 0 && featureStdDev.get(a) == 0) {
+        if (broadcastMeanAndStdDev.value._1(a) == 0 && broadcastMeanAndStdDev.value._2(a) == 0) {
           normalizedFeatureArray(a) = 0.0
         } else {
-          normalizedFeatureArray(a) = (features(a) - featureMean.get(a)) / featureStdDev.get(a)
+          normalizedFeatureArray(a) = (features(a) - broadcastMeanAndStdDev.value._1(a)) / broadcastMeanAndStdDev.value._2(a)
         }
       }
       LabeledPoint(point.label, normalizedFeatureArray)
     })
-    (normalizedRDD,featureMean.toArray,featureStdDev.toArray)
+    (normalizedRDD, featureMean.toArray, featureStdDev.toArray)
   }
 
   def split[T: Manifest](data: RDD[T], percentage: Double, seed: Long = System.currentTimeMillis()): (RDD[T], RDD[T]) = {

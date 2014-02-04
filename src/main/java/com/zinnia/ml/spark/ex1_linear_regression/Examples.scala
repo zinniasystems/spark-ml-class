@@ -20,8 +20,10 @@ object Ex1 {
     println("Running Regression")
     val featureScaledData = regression.normaliseFeatures(labelledRDD)
     labelledRDD = featureScaledData._1.cache()
-    val labelMeanAndStdDev = featureScaledData._2
-    val featureMeanAndStdDev = featureScaledData._3
+    val featureMean = featureScaledData._2
+    val featureStd = featureScaledData._3
+    val labelMean = featureScaledData._4
+    val labelStd = featureScaledData._5
     val model = regression.runLinearRegression(labelledRDD, 30, Array(0.80),0.6,1.0)
     println("Finding Error Rate")
     val errorRate = regression.findErrorRate(labelledRDD, model)
@@ -30,10 +32,10 @@ object Ex1 {
     println(model.intercept)
     model.weights.foreach(println)
     print("For population = 35,000, we predict a profit of: ")
-    println(regression.doPrediction(model,Array(3.5),labelMeanAndStdDev,featureMeanAndStdDev)*10000)
+    println(regression.doPrediction(model,Array(3.5),(labelMean,labelStd),featureMean,featureStd)*10000)
     println("Octave predicted value is: 2912.764904")
     print("For population = 75,000, we predict a profit of: ")
-    println(regression.doPrediction(model,Array(7.0),labelMeanAndStdDev,featureMeanAndStdDev)*10000)
+    println(regression.doPrediction(model,Array(7.0),(labelMean,labelStd),featureMean,featureStd)*10000)
     println("Octave predicted value is: 44606.906716")
 
 
@@ -50,8 +52,10 @@ object Ex1_Multi {
     println("Running Regression")
     val featureScaledData = regression.normaliseFeatures(labelledRDD)
     labelledRDD = featureScaledData._1.cache()
-    val labelMeanAndStdDev = featureScaledData._2
-    val featureMeanAndStdDev = featureScaledData._3
+    val featureMean = featureScaledData._2
+    val featureStd = featureScaledData._3
+    val labelMean = featureScaledData._4
+    val labelStd = featureScaledData._5
     val model = regression.runLinearRegression(labelledRDD, 10, Array(0.0, 0.0),0.8,1.0)
     println("Finding Error Rate")
     val errorRate = regression.findErrorRate(labelledRDD, model)
@@ -60,7 +64,7 @@ object Ex1_Multi {
     println(model.intercept)
     model.weights.foreach(println)
     println("Predictions for the 1650 sqft 3 bed room house is: ")
-    println(regression.doPrediction(model,Array(1650.0,3.0),labelMeanAndStdDev,featureMeanAndStdDev))
+    println(regression.doPrediction(model,Array(1650.0,3.0),(labelMean,labelStd),featureMean,featureStd))
     println("Octave result for this prediction was 293081.464335")
 
   }

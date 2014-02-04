@@ -4,6 +4,7 @@ import org.apache.spark.mllib.regression.{LinearRegressionWithSGD, LabeledPoint,
 import org.apache.spark.rdd.RDD
 import java.lang.Math
 import com.zinnia.ml.spark.util.RegressionUtil
+import org.apache.spark.mllib.util.MLUtils
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,11 +16,11 @@ import com.zinnia.ml.spark.util.RegressionUtil
 class LinearRegression {
 
   //Predicts the possibility of the data set provided as input and handles feature normalisations also.
-  def doPrediction(model:LinearRegressionModel, features:Array[Double],labelMeanStd:(Double,Double)=null,featureMeanStd:Array[(Double,Double)]=null):Double={
-    if (labelMeanStd !=null && featureMeanStd != null) {
+  def doPrediction(model:LinearRegressionModel, features:Array[Double],labelMeanStd:(Double,Double)=null,featureMean:Array[Double]=null, featureStdDev : Array[Double]=null):Double={
+    if (labelMeanStd !=null || featureMean != null || featureStdDev != null) {
       val normalizedFeatures = new Array[Double](features.length)
       for (a <- 0 to features.length - 1) {
-        normalizedFeatures(a) = (features(a) - featureMeanStd(a)._1) / featureMeanStd(a)._2
+        normalizedFeatures(a) = (features(a) - featureMean(a)) / featureStdDev(a)
       }
       val finalPredictedValue = model.predict(normalizedFeatures) * labelMeanStd._2 + labelMeanStd._1
       finalPredictedValue
@@ -32,15 +33,12 @@ class LinearRegression {
 
   //Calculates the rate of error the model is predicting
   def findErrorRate(labelledRDD: RDD[LabeledPoint], model: LinearRegressionModel): Double = {
-    val labelAndPreds = labelledRDD.map {
-      labeledPoint =>
+    val total = labelledRDD.map (
+      labeledPoint =>{
         val prediction = model.predict(labeledPoint.features)
         Math.pow(labeledPoint.label - prediction, 2.0)
-    }
-    val total = labelAndPreds.reduce((firstValue, secondValue) => {
-      firstValue + secondValue
-    })
-    val trainError = total / (2 * labelAndPreds.count())
+    }).reduce(_+_)
+    val trainError = total / (2 * labelledRDD.count())
     trainError
   }
 
@@ -54,49 +52,39 @@ class LinearRegression {
   }
 
   //Normalises any number of features in a RDD of LabeledPoints and returns the normalised RDD, mean and std dev of label and features.
-  def normaliseFeatures(labelledRDD: RDD[LabeledPoint]): (RDD[LabeledPoint],(Double,Double),Array[(Double,Double)]) = {
+  def normaliseFeatures(labelledRDD: RDD[LabeledPoint]): (RDD[LabeledPoint], Array[Double], Array[Double], Double, Double) = {
+    val context = labelledRDD.context
     val numOfFeatures = labelledRDD.first().features.length
-    val featureMeanAndStdDev = new Array[(Double,Double)](numOfFeatures)
+    val nexamples = labelledRDD.count()
+    val results = MLUtils.computeStats(labelledRDD,numOfFeatures,nexamples)
+    val labelMean = results._1
+    val featureMean = results._2.toArray
+    val featureStdDev = results._3.toArray
 
-    for (a <- 0 to labelledRDD.first().features.length-1){
-      val singleFeature = labelledRDD.map(point => {
-        point.features(a)
-      })
-      singleFeature.cache()
-      featureMeanAndStdDev(a) = (RegressionUtil.calcMeanAndStdDev(singleFeature.toArray()))
-    }
+    var broadcastLabelMean = context.broadcast(labelMean)
 
-    val label = labelledRDD.map(point => {
-      point.label
-    })
+    val intermediate = labelledRDD.map(eachLabelledPoint=>{
+      Math.pow(eachLabelledPoint.label-broadcastLabelMean.value,2.0)
+    }).reduce((a,b)=>{a+b})
 
-    var labelMeanAndStdDev = RegressionUtil.calcMeanAndStdDev(label.toArray())
+    val labelStdDev = Math.sqrt(intermediate/(nexamples-1))
+    val broadcastMeanAndStdDev = context.broadcast(labelMean,labelStdDev,featureMean,featureStdDev)
 
     val normalizedRDD = labelledRDD.map(point => {
-      var normalizedFeatureArray = new Array[Double](numOfFeatures)
+      val normalizedFeatureArray = new Array[Double](numOfFeatures)
       val features = point.features
-      for (a <- 0 to numOfFeatures-1) {
-        normalizedFeatureArray(a) = (features(a) - featureMeanAndStdDev(a)._1) / featureMeanAndStdDev(a)._2
+      for (a <- 0 to numOfFeatures - 1) {
+        if (broadcastMeanAndStdDev.value._3(a) == 0 && broadcastMeanAndStdDev.value._4(a) == 0) {
+          normalizedFeatureArray(a) = 0.0
+        } else {
+          normalizedFeatureArray(a) = (features(a) - broadcastMeanAndStdDev.value._3(a)) / broadcastMeanAndStdDev.value._4(a)
+        }
+
       }
-      val newLabel = (point.label - labelMeanAndStdDev._1) / labelMeanAndStdDev._2
-      LabeledPoint(newLabel, normalizedFeatureArray)
+      LabeledPoint((point.label - broadcastMeanAndStdDev.value._1)/broadcastMeanAndStdDev.value._2, normalizedFeatureArray)
     })
-    (normalizedRDD,labelMeanAndStdDev,featureMeanAndStdDev)
+    (normalizedRDD,featureMean,featureStdDev,labelMean,labelStdDev)
   }
 
-  /*def scaleSingleFeature(labelledRDD: RDD[LabeledPoint]): RDD[LabeledPoint] = {
-    val feature = labelledRDD.map(point => {
-      point.features(0)
-    })
-    val label = labelledRDD.map(point => {
-      point.label
-    })
-    val meanAndStdLabel = calcMeanAndStdDev(label.toArray())
-    val meanAndStd = calcMeanAndStdDev(feature.toArray())
-    val featurizedRDD = labelledRDD.map(value => {
-      LabeledPoint(((value.label - meanAndStdLabel._2) / meanAndStdLabel._1), Array(((value.features(0) - meanAndStd._2) / meanAndStd._1)))
-    })
-    featurizedRDD
-  }*/
 
 }
