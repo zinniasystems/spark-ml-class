@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 
 /**
  * Created with IntelliJ IDEA.
- * User: hadoop
+ * User: Shashank L
  * Date: 22/1/14
  * Time: 12:27 PM
  * To change this template use File | Settings | File Templates.

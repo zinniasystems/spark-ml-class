@@ -8,7 +8,7 @@ import org.apache.spark.mllib.util.MLUtils
 
 /**
  * Created with IntelliJ IDEA.
- * User: hadoop
+ * User: Shashank L
  * Date: 21/1/14
  * Time: 11:27 PM
  * To change this template use File | Settings | File Templates.

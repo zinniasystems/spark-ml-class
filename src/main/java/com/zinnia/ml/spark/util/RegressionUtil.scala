@@ -7,7 +7,7 @@ import org.apache.spark.mllib.classification.{LogisticRegressionWithSGD, Logisti
 
 /**
  * Created with IntelliJ IDEA.
- * User: hadoop
+ * User: Shashank L
  * Date: 20/1/14
  * Time: 4:13 PM
  * To change this template use File | Settings | File Templates.

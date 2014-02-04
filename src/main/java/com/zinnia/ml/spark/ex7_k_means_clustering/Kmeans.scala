@@ -5,6 +5,14 @@ import org.apache.spark.mllib.clustering.KMeans
 import org.apache.spark.mllib.util.MLUtils
 
 /**
+ * Created with IntelliJ IDEA.
+ * User: Ganesha Yadiyala
+ * Date: 4/2/14
+ * Time: 3:45 PM
+ * To change this template use File | Settings | File Templates.
+ */
+
+/**
  * CustomKmeans class which has the methods to some of the key operations involved in K-means algorithm like
  * running K-means algorithm on given data set, pre processing of data set, finding the centroids etc..
  */

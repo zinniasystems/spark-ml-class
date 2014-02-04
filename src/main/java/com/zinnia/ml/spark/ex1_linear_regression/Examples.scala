@@ -5,7 +5,7 @@ import com.zinnia.ml.spark.util.RegressionUtil
 
 /**
  * Created with IntelliJ IDEA.
- * User: hadoop
+ * User: Shashank L
  * Date: 22/1/14
  * Time: 12:26 PM
  * To change this template use File | Settings | File Templates.
