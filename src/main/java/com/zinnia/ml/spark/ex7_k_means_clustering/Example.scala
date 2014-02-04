@@ -10,12 +10,12 @@ import com.zinnia.ml.spark.ex7.K_Means_Clustering.Kmeans
  * Time: 3:45 PM
  * To change this template use File | Settings | File Templates.
  */
-object ex7_Data1 {
+object ex7_Data2 {
   def main(args:Array[String]){
     val sparkContext = new SparkContext("local", "kmeans")
     val customKmeans = new Kmeans()
 
-    val inputFileex7 = "src/main/resources/ex7_k_means_clustering/ex7data1.txt"
+    val inputFileex7 = "src/main/resources/ex7_k_means_clustering/ex7data2.txt"
     val inputRawRDDex7 = sparkContext.textFile(inputFileex7)
     val inputRDDex7=customKmeans.getInputDataSet(inputRawRDDex7)
     val noOfCluster1 = 3
