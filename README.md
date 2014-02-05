@@ -10,40 +10,40 @@ The implementation of the same examples in Octave is also available at <https://
 
 ###Linear Regression
 
-Run the main function com.zinnia.ml.spark.ex1_linear_regression.Ex1.main()
+Run the main function com.zinnia.ml.spark.ex1_linear_regression.Ex1.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex1_linear_regression/ex1data1.txt
 
-Run the main function com.zinnia.ml.spark.ex1_linear_regression.Ex1_Multi.main()
+Run the main function com.zinnia.ml.spark.ex1_linear_regression.Ex1_Multi.main().
 This is an example for multiple variable Linear Regression
 Dataset for this example is src/main/resources/ex1_linear_regression/ex1data2.txt
 
 ###Logistic Regression
 
-Run the main function com.zinnia.ml.spark.ex2_logistic_regression.Ex2_Data1.main()
+Run the main function com.zinnia.ml.spark.ex2_logistic_regression.Ex2_Data1.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex2_logistic_regression/ex2data1.txt
 
-Run the main function com.zinnia.ml.spark.ex2_logistic_regression.Ex2_Data2_Poly.main()
+Run the main function com.zinnia.ml.spark.ex2_logistic_regression.Ex2_Data2_Poly.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex2_logistic_regression/ex2data2.txt
 
-Run the main function com.zinnia.ml.spark.ex3_multiclass_classification.Ex3_Data4.main()
+Run the main function com.zinnia.ml.spark.ex3_multiclass_classification.Ex3_Data4.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex3_multiclass_classification/ex3data1.csv
 
 ###K-Means Clustering
 
-Run the main function com.zinnia.ml.spark.ex7_k_means_clustering.ex7_Data2.main()
+Run the main function com.zinnia.ml.spark.ex7_k_means_clustering.ex7_Data2.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex7_k_means_clustering/ex7data2.txt
 
-Run the main function com.zinnia.ml.spark.ex7_k_means_clustering.ex7_Bird_small.main()
+Run the main function com.zinnia.ml.spark.ex7_k_means_clustering.ex7_Bird_small.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex7_k_means_clustering/bird_data.txt
 
 ###Principal Component Anaylysis
 
-Run the main function com.zinnia.ml.spark.ex7_pca.ex7_pca_data1.main()
+Run the main function com.zinnia.ml.spark.ex7_pca.ex7_pca_data1.main().
 This is an example for single variable Linear Regression.
 Dataset for this example is src/main/resources/ex7_pca_data/ex7data1.txt
