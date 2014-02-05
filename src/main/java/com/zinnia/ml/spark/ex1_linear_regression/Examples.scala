@@ -14,7 +14,7 @@ object Ex1 {
   def main(args: Array[String]) {
     val regression = new LinearRegression
     val context = new SparkContext("local", "ml-exercise")
-    val fileContents = context.textFile("/home/hadoop/MachineLearning/Exp/MachineLearningExperiment/src/main/resources/ex1_linear_regression/ex1data1.txt").cache()
+    val fileContents = context.textFile("src/main/resources/ex1_linear_regression/ex1data1.txt").cache()
     println("Reading File")
     var labelledRDD = RegressionUtil.parseFileContent(fileContents).cache()
     println("Running Regression")
@@ -46,7 +46,7 @@ object Ex1_Multi {
   def main(args: Array[String]) {
     val regression = new LinearRegression
     val context = new SparkContext("local", "ml-exercise")
-    val fileContents = context.textFile("/home/hadoop/MachineLearning/Exp/MachineLearningExperiment/src/main/resources/ex1_linear_regression/ex1data2.txt").cache()
+    val fileContents = context.textFile("src/main/resources/ex1_linear_regression/ex1data2.txt").cache()
     println("Reading File")
     var labelledRDD = RegressionUtil.parseFileContent(fileContents).cache()
     println("Running Regression")
