@@ -17,7 +17,7 @@ object Ex3_Data4{
   def main(args: Array[String]) {
     val regression = new LogisticRegression
     val context = new SparkContext("local","ml-exercise")
-    val fileContents = context.textFile("src/main/resources/ex2_logistic_regression/ex3data1.csv").cache()
+    val fileContents = context.textFile("src/main/resources/ex3_multiclass_classification/ex3data1.csv").cache()
     println("Parsing file contents")
     val labelledRDD = RegressionUtil.parseFileContent(fileContents).cache()
     println("Normalizing the features")
