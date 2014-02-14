@@ -63,6 +63,7 @@ class Kmeans {
     for (i <- 0 until centers.length) {
       val distance = MLUtils.squaredDistance(point, centers(i))
       if (distance < bestDistance) {
+        bestDistance = distance
         index = i
       }
     }
